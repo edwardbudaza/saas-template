@@ -1,29 +1,194 @@
-# Create T3 App
+# 🚀 T3 SaaS Boilerplate
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is a modern, extensible, and secure SaaS starter built with the **T3 Stack**: **Next.js (App Router)**, **TypeScript**, **TailwindCSS**, **Prisma**, **Auth.js**, and **LemonSqueezy** for billing.
 
-## What's next? How do I make an app with this?
+> Designed to **kickstart SaaS products** quickly with robust authentication, credits system, billing flow, protected routes, and clean UI components.
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+---
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## 📁 Project Structure
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```
+.
+├── prisma/                 # Prisma DB schema and SQLite DB
+├── public/                 # Public static assets
+├── src/
+│   ├── actions/            # Server Actions (e.g. billing logic)
+│   ├── app/                # App Router structure (auth, billing pages, API)
+│   ├── components/         # UI components and feature-specific components
+│   ├── env.js              # Runtime environment variables
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility and integration libraries (e.g. LemonSqueezy)
+│   ├── server/             # Server-only modules (auth, DB)
+│   └── styles/             # Global styles (Tailwind)
+├── .env                    # Environment variables
+├── package.json
+├── tsconfig.json
+├── next.config.js
+└── README.md
+```
 
-## Learn More
+---
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## ✅ Features
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+### 🧠 Core
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+* 🔐 Auth.js with **NextAuth** (Credentials + Socials ready)
+* 🎟️ **Credits system** for usage-based billing
+* 💳 LemonSqueezy Webhook + Checkout integration
+* 📦 Prisma ORM with SQLite (local) or MySQL (prod)
+* ✨ ShadCN UI components (customizable)
 
-## How do I deploy this?
+### 📦 Billing System
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+* `createCheckoutAction()` server action creates dynamic checkout links
+* Webhook handler (`/api/lemonsqueezy/webhook`) listens to order events
+* Credits are **added**, **deducted**, or **refunded**
+* `/billing/success` page confirms new credits and shows recent order
+
+### 🔒 Authentication
+
+* Custom credentials flow (`/api/auth/signup`)
+* Protected routes using:
+
+  * `auth()` in `layout.tsx`
+  * `<AuthProvider>` and `useRequireAuth()` hook
+
+### 🧩 Modular Design
+
+* Hooks like `useAuth`, `useMobile`, `useAuthAction`
+* UI/UX encapsulated into composable components
+* Easy to plug in new pages or features
+
+---
+
+## 🚧 How It Works (Behind the Scenes)
+
+### Auth
+
+* Defined in `src/server/auth/config.ts`
+* Session middleware checks for auth on all pages
+* Signup uses bcrypt and zod for validation
+
+### Billing
+
+* Pages: `/billing`, `/billing/success`
+* Components: `PricingCards`, `CheckoutForm`
+* Checkout: calls `createCheckoutAction` → LemonSqueezy URL
+* Webhook:
+
+  * Validates request with HMAC-SHA256
+  * Increments/decrements credits
+  * Records orders in `lemonSqueezyOrder` table
+
+### Credits Enforcement
+
+Use server actions like:
+
+```ts
+await consumeCredits(5, "AI Tool Usage");
+```
+
+It validates balance, updates the DB, and optionally redirects or throws.
+
+---
+
+## 🧪 Local Development
+
+### Setup
+
+```bash
+git clone https://github.com/your-username/your-saas-boilerplate.git
+cd your-saas-boilerplate
+npm install
+```
+
+### .env File
+
+Create `.env`:
+
+```env
+DATABASE_URL="file:./db.sqlite"
+AUTH_SECRET="your-long-random-secret"
+LEMONSQUEEZY_API_KEY="..."
+LEMONSQUEEZY_STORE_ID="..."
+LEMONSQUEEZY_WEBHOOK_SECRET="..."
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+```
+
+### Run Locally
+
+```bash
+npx prisma migrate dev
+npm run dev
+```
+
+---
+
+## 🧱 Cloning for a New SaaS Idea
+
+1. **Rename project**
+
+   * Change name in `package.json` and metadata in `src/app/layout.tsx`
+
+2. **Reset DB**
+
+   ```bash
+   rm prisma/db.sqlite
+   npx prisma migrate reset
+   ```
+
+3. **Adjust features**
+
+   * Remove or replace billing if not needed
+   * Add new routes under `src/app/(main)/your-feature`
+   * Extend credit logic in `actions/lemonsqueezy.ts`
+
+4. **Reuse UI**
+
+   * `components/ui` includes reusable elements (button, modal, card, etc.)
+   * Customize theme, branding, layout as needed
+
+---
+
+## 🛠️ Commands
+
+| Command                  | Description               |
+| ------------------------ | ------------------------- |
+| `npm run dev`            | Start development server  |
+| `npm run build`          | Build for production      |
+| `npm run lint`           | Run ESLint                |
+| `npx prisma studio`      | Explore DB in web UI      |
+| `npx prisma migrate dev` | Run migrations (dev only) |
+
+---
+
+## 📌 Notes for Future Upgrades
+
+* Replace SQLite with PostgreSQL or MySQL by updating `DATABASE_URL` and running `prisma migrate`.
+* Replace LemonSqueezy with Stripe (credit logic remains the same).
+* Easily add onboarding, teams, subscriptions, or usage limits.
+* Move to **Vercel** or **Render** for deployment (Edge-ready).
+* Add Vite, TurboRepo, or bun for performance, if needed.
+
+---
+
+## 📄 License
+
+MIT — free to use, clone, and modify for personal or commercial use.
+
+---
+
+## ✍️ Author Notes
+
+This project is built to **scale and pivot fast**. You can:
+
+* Reuse components for multiple SaaS ideas.
+* Keep it as a monorepo or extract modules.
+* Clone and swap out backend tools (e.g., Stripe, Supabase).
+* Focus on features while skipping boilerplate and auth headaches.
+
+> *“This is your launchpad. Build fast, fail fast, and ship something valuable.”*
+
+---
